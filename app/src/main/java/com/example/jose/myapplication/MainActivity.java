@@ -30,9 +30,11 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     EditText portAddress;
     private DrawingView drawView, drawCanvas, drawPaint, startY, endX, endY, start;
     private ImageButton currPaint, drawBtn, eraseBtn, newBtn, saveBtn, undoBtn;
-    private Button telnetSend;
+    private Button telnetSend, pressButton;
     private float largeBrush;
     private Socket socket;
+    boolean flag = false;
+    boolean flag2 = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +58,10 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         //Instanciar el boton de guardar y responder al evento
         saveBtn = (ImageButton) findViewById(R.id.save_btn);
         saveBtn.setOnClickListener(this);
+
+        //
+        pressButton = (Button) findViewById(R.id.pressButton);
+        pressButton.setOnClickListener(this);
 
         //Instanciar el boton de guardar y responder al evento
         undoBtn = (ImageButton) findViewById(R.id.draw_btn);
@@ -173,21 +179,23 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             newDialog.show();
         } else if (view.getId() == R.id.save_btn) {
 
-            AlertDialog.Builder saveDialog = new AlertDialog.Builder(this);
-            saveDialog.setTitle("Send Plot");
-            saveDialog.setMessage("Send Plot to the Plot Machine?");
-            saveDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
+            MyClientTask myClientTask = new MyClientTask(textAddress.getText().toString()
+                    , Integer.parseInt(portAddress.getText().toString()));
+            myClientTask.execute();
 
-                }
-            });
-            saveDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
-            saveDialog.show();
+            flag = true;
+            Toast.makeText(getApplicationContext(), "Set Plotter to start point",
+                    Toast.LENGTH_LONG).show();
 
+
+        } else if (view.getId() == R.id.pressButton) {
+
+            MyClientTask myClientTask = new MyClientTask(textAddress.getText().toString()
+                    , Integer.parseInt(portAddress.getText().toString()));
+            myClientTask.execute();
+
+
+            flag2 = true;
 
         }
 
@@ -238,31 +246,68 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             Socket socket = null;
 
             try {
-                socket = new Socket(dstAddress, dstPort);
 
-                DataOutputStream sendInfo = new DataOutputStream(socket.getOutputStream());
+                if (flag == false && flag2 == false) {
+                    for (int i = 0; i < DrawingView.pointsStartXList.size(); i++) {
 
-                /*for (int i = 0; i < DrawingView.pointsStartXList.size(); i++) {
+                        socket = new Socket(dstAddress, dstPort);
+                        DataOutputStream sendInfo = new DataOutputStream(socket.getOutputStream());
+
+                        sendInfo.writeUTF("/" + DrawingView.pointsStartXList.get
+                                (i).toString() + "/" + DrawingView.pointsStartYList.get
+                                (i).toString() + "/" + DrawingView.pointsEndXList.get
+                                (i).toString() + "/" + DrawingView.pointsEndYList.get
+                                (i).toString() + "/");
 
 
-                    sendInfo.writeUTF(DrawingView.pointsStartXList.get
-                            (i).toString() + " " + DrawingView.pointsStartYList.get
-                            (i).toString() + " " + DrawingView.pointsEndXList.get
-                            (i).toString() + " " + DrawingView.pointsEndYList.get
-                            (i).toString());
+                        sendInfo.flush();
+                        sendInfo.close();
+
+
+                    }
+
+                }
+
+
+                if (flag == true) {
+                    socket = new Socket(dstAddress, dstPort);
+                    DataOutputStream sendInfo = new DataOutputStream(socket.getOutputStream());
+
+                    sendInfo.writeUTF("/" + "0" + "/" + "0" + "/" + "0" + "/" + "0" + "/");
+
 
                     sendInfo.flush();
+                    sendInfo.close();
+                    flag = false;
+                }
 
-                }*/
+                if (flag2 == true) {
 
-                sendInfo.writeFloat(DrawingView.pointsStartXList.get
-                        (DrawingView.pointsStartXList.size() - 1).intValue());
+
+                    socket = new Socket(dstAddress, dstPort);
+                    DataOutputStream sendInfo = new DataOutputStream(socket.getOutputStream());
+
+                    sendInfo.writeUTF("/" + DrawingView.pointsStartXList.get
+                            (DrawingView.pointsStartXList.size() - 1).toString()
+                            + "/" + DrawingView.pointsStartYList.get
+                            (DrawingView.pointsStartYList.size() - 1).toString()
+                            + "/" + DrawingView.pointsEndXList.get
+                            (DrawingView.pointsEndXList.size() - 1).toString()
+                            + "/" + DrawingView.pointsEndYList.get
+                            (DrawingView.pointsEndYList.size() - 1).toString()
+                            + "/");
+
+                    sendInfo.flush();
+                    sendInfo.close();
+                    flag2 = false;
+
+                }
 
                 // Send the exit message
                 //sendInfo.writeByte(-1);
-                sendInfo.flush();
+                //sendInfo.flush();
 
-                sendInfo.close();
+                //  sendInfo.close();
 
                 //***************************************************************//
 

@@ -46,6 +46,7 @@ public class DrawingView extends View {
     private int paintColor = 0xFF660000;
     //canvas bitmap
     private Bitmap canvasBitmap;
+    public static boolean flag = false;
 
 
     public DrawingView(Context context) {
@@ -111,9 +112,14 @@ public class DrawingView extends View {
         switch (event.getAction()) {
 
             case MotionEvent.ACTION_DOWN:
-                startX = event.getX();
-                startY = event.getY();
+                if (pointsStartXList.size() > 0) {
 
+                    startX = pointsEndXList.get(pointsEndXList.size() - 1);
+                    startY = pointsEndYList.get(pointsEndYList.size() - 1);
+                } else {
+                    startX = event.getX();
+                    startY = event.getY();
+                }
 
                 invalidate();
                 break;
